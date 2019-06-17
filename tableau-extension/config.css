@@ -1,0 +1,30 @@
+.section-heading {
+  display: block;
+  padding-bottom: 3px;
+  border-bottom: 1px solid rgba(102, 102, 102, 0.1) !important;
+  font-weight: 400;
+  font-size: 16px;
+}
+
+.mapbox-icon { 
+  position: absolute;
+  right: 24px;
+  top: 16px;
+}
+
+.settings-box {
+  box-shadow: 0 0 30px 6px rgba(31,51,73,.1)!important;
+  margin-left: 24px;
+  margin-right: 24px;
+  border-radius: 8px;
+}
+
+input[type="color"] {
+  padding: 0;
+  border: 0;
+  width: 24px;
+  height: 24px;
+  outline: none;
+  background: transparent;
+  cursor: pointer;
+}

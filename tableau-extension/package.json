@@ -1,0 +1,41 @@
+{
+  "name": "road_to_hack",
+  "version": "1.0.0",
+  "description": "Tableau extension to display your road to Tableau NYC Hackathon 2019",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "mkdir -p build && cp -R src build && cp index.html build/ && cp config.html build/ && cp config.css build/ && cp main.css build/ && cp tableau-extensions-1.latest.min.js build/ &&browserify index.js -t babelify > build/bundle.js",
+    "start": "budo index.js:bundle.js --live -- -t babelify"
+  },
+  "transform": [
+    [
+      "babelify",
+      {
+        "comments": false
+      }
+    ]
+  ],
+  "dependencies": {
+    "@turf/along": "^6.0.1",
+    "@turf/area": "^6.0.1",
+    "@turf/bbox": "^6.0.1",
+    "@turf/bbox-polygon": "^6.0.1",
+    "@turf/bearing": "^6.0.1",
+    "@turf/buffer": "^5.1.5",
+    "@turf/helpers": "^6.1.4",
+    "@turf/length": "^6.0.2",
+    "babel-eslint": "^9.0.0",
+    "babel-polyfill": "^6.26.0",
+    "eslint": "^5.6.0",
+    "mapbox-gl": "^0.48.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "babelify": "^8.0.0",
+    "browserify": "^16.2.2",
+    "budo": "^11.3.2",
+    "uglify-js": "^3.4.8"
+  }
+}

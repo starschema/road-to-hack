@@ -1,0 +1,9 @@
+version: v1
+publisher:
+  builds:
+  - filter: on-branch
+    name: publisher-branches
+    config:
+      node_version: 8.11.4
+      site_build_dir: build
+      npm_build_script: build

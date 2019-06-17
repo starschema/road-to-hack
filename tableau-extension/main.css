@@ -1,0 +1,42 @@
+/* Add your custom styles here. */
+.popup td
+{
+    padding-left: 12px;
+}
+
+.legend {
+    position: fixed; 
+    top: 10px; 
+    left: 10px; 
+    z-index: 100000;
+    width: 100px; 
+    background: rgba(255, 255, 255, 0.75);
+}
+
+.legend #color-legend {
+    opacity: 0.9;
+    height: 10px; 
+    display: flex;
+    width: 100%;
+}
+
+.legend #color-legend div {
+    margin: 1px;
+}
+
+.legend-labels {
+    width: 100%;
+}
+
+.legend .label {
+    font-size: 9px;
+    line-height: 12px;
+}
+
+.legend .label.min-label {
+    float: left;
+}
+
+.legend .label.max-label {
+    float: right;
+}
