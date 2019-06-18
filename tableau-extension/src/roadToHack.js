@@ -8,6 +8,9 @@ import along from '@turf/along'
 import turfLength from '@turf/length'
 import bearing from '@turf/bearing'
 import buffer from '@turf/buffer'
+
+import { loadMarker, flexTrex } from './markers'
+
 const helper = require('@turf/helpers')
 
 
@@ -152,82 +155,87 @@ export default class RoadToHack {
         let counter = 0
  
         map.on('load', function () {
-            // Add a source and layer displaying a point which will be animated in a circle.
-            map.addSource('route', {
-                'type': 'geojson',
-                'data': route
-            })
- 
-            map.addSource('point', {
-                'type': 'geojson',
-                'data': point
-            })
- 
-            map.addLayer({
-                'id': 'route',
-                'source': 'route',
-                'type': 'line',
-                'paint': {
-                    'line-width': 2,
-                    'line-color': '#007cbf'
-                }
-            })
- 
-            map.addLayer({
-                'id': 'point',
-                'source': 'point',
-                'type': 'symbol',
-                'layout': {
-                    'icon-image': 'airport-15',
-                    'icon-rotate': ['get', 'bearing'],
-                    'icon-rotation-alignment': 'map',
-                    'icon-allow-overlap': true,
-                    'icon-ignore-placement': true
-                }
-            })
- 
-            function animate() {
-                // Update point geometry to a new position based on counter denoting
-                // the index to access the arc.
-                point.features[0].geometry.coordinates = route.features[0].geometry.coordinates[counter]
- 
-                // Calculate the bearing to ensure the icon is rotated to match the route arc
-                // The bearing is calculate between the current point and the next point, except
-                // at the end of the arc use the previous point and the current point
-                point.features[0].properties.bearing = bearing(
-                    helper.point(route.features[0].geometry.coordinates[counter >= steps ? counter - 1 : counter]),
-                    helper.point(route.features[0].geometry.coordinates[counter >= steps ? counter : counter + 1])
-                )
- 
-                // Update the source with this new data.
-                map.getSource('point').setData(point)
- 
-                // Request the next frame of animation so long the end has not been reached.
-                if (counter < steps) {
-                    requestAnimationFrame(animate)
-                }
- 
-                counter = counter + 1
-            }
- 
-            document.getElementById('replay').addEventListener('click', function() {
-                // Set the coordinates of the original point back to origin
-                point.features[0].geometry.coordinates = origin
- 
-                // Update the source layer
-                map.getSource('point').setData(point)
- 
-                // Reset the counter
-                counter = 0
- 
-                // Restart the animation.
-                animate(counter)
-            })
+            return loadMarker(map, flexTrex.image, flexTrex.name)
+                .then(() => {
+                    // Add a source and layer displaying a point which will be animated in a circle.
+                    map.addSource('route', {
+                        'type': 'geojson',
+                        'data': route
+                    })
+        
+                    map.addSource('point', {
+                        'type': 'geojson',
+                        'data': point
+                    })
+        
+                    map.addLayer({
+                        'id': 'route',
+                        'source': 'route',
+                        'type': 'line',
+                        'paint': {
+                            'line-width': 2,
+                            'line-color': '#007cbf'
+                        }
+                    })
+        
+                    map.addLayer({
+                        'id': 'point',
+                        'source': 'point',
+                        'type': 'symbol',
+                        'layout': {
+                            'icon-image': flexTrex.name,
+                            'icon-keep-upright': true,
+                            'icon-rotate': ['+', ['get', 'bearing'], -90],
+                            'icon-rotation-alignment': 'map',
+                            'icon-allow-overlap': true,
+                            'icon-ignore-placement': true,
+                            // 'symbol-placement': 'line',
+                        }
+                    })
+        
+                    function animate() {
+                        // Update point geometry to a new position based on counter denoting
+                        // the index to access the arc.
+                        point.features[0].geometry.coordinates = route.features[0].geometry.coordinates[counter]
+        
+                        // Calculate the bearing to ensure the icon is rotated to match the route arc
+                        // The bearing is calculate between the current point and the next point, except
+                        // at the end of the arc use the previous point and the current point
+                        point.features[0].properties.bearing = bearing(
+                            helper.point(route.features[0].geometry.coordinates[counter >= steps ? counter - 1 : counter]),
+                            helper.point(route.features[0].geometry.coordinates[counter >= steps ? counter : counter + 1])
+                        )
+        
+                        // Update the source with this new data.
+                        map.getSource('point').setData(point)
+        
+                        // Request the next frame of animation so long the end has not been reached.
+                        if (counter < steps) {
+                            requestAnimationFrame(animate)
+                        }
+        
+                        counter = counter + 1
+                    }
+        
+                    document.getElementById('replay').addEventListener('click', function() {
+                        // Set the coordinates of the original point back to origin
+                        point.features[0].geometry.coordinates = origin
+        
+                        // Update the source layer
+                        map.getSource('point').setData(point)
+        
+                        // Reset the counter
+                        counter = 0
+        
+                        // Restart the animation.
+                        animate(counter)
+                    })
 
-            console.log('Created map...')
+                    console.log('Created map...')
 
-            // Start the animation.
-            animate(counter)
+                    // Start the animation.
+                    animate(counter)
+                })
         })
 
         // const worksheet = Config.findSelectedSheet(this.getConfig().selectedSheet)
