@@ -1,5 +1,5 @@
 {
-  "name": "road_to_hack",
+  "name": "road-to-hack",
   "version": "1.0.0",
   "description": "Tableau extension to display your road to Tableau NYC Hackathon 2019",
   "main": "index.js",
@@ -7,6 +7,10 @@
   "scripts": {
     "build": "mkdir -p build && cp -R src build && cp index.html build/ && cp config.html build/ && cp config.css build/ && cp main.css build/ && cp tableau-extensions-1.latest.min.js build/ &&browserify index.js -t babelify > build/bundle.js",
     "start": "budo index.js:bundle.js --live -- -t babelify"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:starschema/road-to-hack.git"
   },
   "transform": [
     [
@@ -27,15 +31,15 @@
     "@turf/length": "^6.0.2",
     "babel-eslint": "^9.0.0",
     "babel-polyfill": "^6.26.0",
-    "eslint": "^5.6.0",
     "mapbox-gl": "^0.48.0"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-preset-env": "^1.7.0",
     "babelify": "^8.0.0",
-    "browserify": "^16.2.2",
-    "budo": "^11.3.2",
+    "browserify": "^16.2.3",
+    "budo": "^11.6.2",
+    "eslint": "^5.16.0",
     "uglify-js": "^3.4.8"
   }
 }
