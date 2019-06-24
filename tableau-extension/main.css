@@ -4,6 +4,21 @@
     padding-left: 12px;
 }
 
+#replay {
+    bottom: 8px;
+    right: 48px;
+}
+
+#replay-button {
+    background-color: #468936;
+}
+
+.bottom-right {
+    position: absolute;
+    bottom: 38px;
+    right: 8px;
+}
+
 .legend {
     position: fixed; 
     top: 10px; 

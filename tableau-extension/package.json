@@ -29,12 +29,13 @@
     "@turf/buffer": "^5.1.5",
     "@turf/helpers": "^6.1.4",
     "@turf/length": "^6.0.2",
-    "babel-eslint": "^9.0.0",
     "babel-polyfill": "^6.26.0",
     "mapbox-gl": "^0.48.0"
   },
   "devDependencies": {
+    "acorn": "^6.1.1",
     "babel-core": "^6.26.3",
+    "babel-eslint": "^10.0.2",
     "babel-preset-env": "^1.7.0",
     "babelify": "^8.0.0",
     "browserify": "^16.2.3",

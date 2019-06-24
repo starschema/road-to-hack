@@ -16,6 +16,20 @@ const helper = require('@turf/helpers')
 
 const TABLEAU_ENTERPRISE_STYLE_URL = 'mapbox://styles/tableau-enterprise/'
 
+// Number of steps to use in the arc and animation, more steps means
+// a smoother arc and animation, but too many steps will result in a
+// low frame rate
+const STEPS = 1500
+
+const PROPERTY_TIMESTAMP = 'timestamp'
+const PROPERTY_TS_EPOCH = 'ts epoch'
+const PROPERTY_TYPE = 'type'
+const PROPERTY_USERNAME  = 'username'
+const PROPERTY_DISTANCE = 'distance km'
+const PROPERTY_LATITUDE = 'latitude'
+const PROPERTY_LONGITUDE = 'longitude'
+const PROPERTY_SPEED = 'speed kph'
+
 
 export default class RoadToHack {
 
@@ -77,8 +91,10 @@ export default class RoadToHack {
 
         const replayDiv = document.createElement('div')
         replayDiv.setAttribute('id', 'replay')
+        replayDiv.setAttribute('class', 'bottom-right')
         const replayButton = document.createElement('button')
-        replayButton.setAttribute('class', 'button btn btn--s')
+        replayButton.setAttribute('id', 'replay-button')
+        replayButton.setAttribute('class', 'button btn btn--s bg-green-light color-black')
         const buttonText = 'Replay'
         replayButton.setAttribute('id', buttonText)
         const text = document.createTextNode(buttonText)
@@ -103,6 +119,28 @@ export default class RoadToHack {
  
         // Washington DC
         let destination = [-77.032, 38.913]
+
+        const features = featureColl.features
+        const departureTime = new Date(features[0].properties[PROPERTY_TIMESTAMP])
+        const arrivalTime = new Date(features[features.length -1].properties[PROPERTY_TIMESTAMP])
+
+        const timeStep = (arrivalTime - departureTime) / STEPS
+
+        console.log('departure time', departureTime)
+        console.log('arrival time', arrivalTime)
+
+        function formatDateTime(dateTime) {
+            const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }
+            return dateTime.toLocaleDateString('en-US', options)
+        }
+
+        const timeDiv = document.createElement('div')
+        timeDiv.setAttribute('id', 'time')
+        const timeText = document.createElement('TEXT')
+        timeText.innerHTML = formatDateTime(departureTime)
+        timeDiv.appendChild(timeText)
+        timeDiv.setAttribute('class', 'bottom-right color-darken75 txt-bold')
+        container.appendChild(timeDiv)
  
         // A simple line from origin to destination.
         let route = {
@@ -134,22 +172,18 @@ export default class RoadToHack {
  
         // Calculate the distance in kilometers between route start/end point.
         let lineDistance = turfLength(route.features[0], 'kilometers')
+        console.log('distance', lineDistance)
  
-        let arc = []
+        let stepPoints = []
  
-        // Number of steps to use in the arc and animation, more steps means
-        // a smoother arc and animation, but too many steps will result in a
-        // low frame rate
-        let steps = 1500
- 
-        // Draw an arc between the `origin` & `destination` of the two points
-        for (let i = 0; i < lineDistance; i += lineDistance / steps) {
+        // Make sure that there are enough stops along the route
+        for (let i = 0; i < lineDistance; i += lineDistance / STEPS) {
             let segment = along(route.features[0], i, 'kilometers')
-            arc.push(segment.geometry.coordinates)
+            stepPoints.push(segment.geometry.coordinates)
         }
  
         // Update the route with calculated arc coordinates
-        route.features[0].geometry.coordinates = arc
+        route.features[0].geometry.coordinates = stepPoints
  
         // Used to increment the value of the point measurement against the route.
         let counter = 0
@@ -198,21 +232,25 @@ export default class RoadToHack {
                         // the index to access the arc.
                         point.features[0].geometry.coordinates = route.features[0].geometry.coordinates[counter]
         
-                        // Calculate the bearing to ensure the icon is rotated to match the route arc
-                        // The bearing is calculate between the current point and the next point, except
-                        // at the end of the arc use the previous point and the current point
-                        point.features[0].properties.bearing = bearing(
-                            helper.point(route.features[0].geometry.coordinates[counter >= steps ? counter - 1 : counter]),
-                            helper.point(route.features[0].geometry.coordinates[counter >= steps ? counter : counter + 1])
-                        )
+                        if (route && route.features.length > 0) {
+                            // Calculate the bearing to ensure the icon is rotated to match the route arc
+                            // The bearing is calculate between the current point and the next point, except
+                            // at the end of the arc use the previous point and the current point
+                            point.features[0].properties.bearing = bearing(
+                                helper.point(route.features[0].geometry.coordinates[counter >= STEPS ? counter - 1 : counter]),
+                                helper.point(route.features[0].geometry.coordinates[counter >= STEPS ? counter : counter + 1])
+                            )
+                        }
         
                         // Update the source with this new data.
                         map.getSource('point').setData(point)
         
                         // Request the next frame of animation so long the end has not been reached.
-                        if (counter < steps) {
+                        if (counter < STEPS) {
                             requestAnimationFrame(animate)
                         }
+
+                        timeText.innerHTML = formatDateTime(new Date(departureTime.getTime() + (counter * timeStep)))
         
                         counter = counter + 1
                     }
@@ -264,25 +302,39 @@ export default class RoadToHack {
                         'Displaying only 10,000 rows.')
                 }
 
-                let columnNames = dataTable.columns.map(column => {
+                // console.log('dataTable', dataTable)
+
+                const columnNames = dataTable.columns.map(column => {
                     return column.fieldName.toLowerCase()
                 })
-                let lat = columnNames.indexOf('latitude')
-                let lng = columnNames.indexOf('longitude')
+                const lat = columnNames.indexOf(PROPERTY_LATITUDE)
+                const lng = columnNames.indexOf(PROPERTY_LONGITUDE)
+                const ts = columnNames.indexOf(PROPERTY_TIMESTAMP)
 
-                let points = dataTable.data.map(datum => {
+                const points = dataTable.data.map(d => {
                     let pointProperty = {}
+                    pointProperty[PROPERTY_TIMESTAMP] = new Date(d[ts].value)
                     return helper.point(
                         [
-                            datum[lng].value,
-                            datum[lat].value
+                            d[lng].value,
+                            d[lat].value
                         ],
                         pointProperty
                     )
                 })
 
-                let featureCollection = helper.featureCollection(points)
-                let boundingBox = bbox(buffer(featureCollection, 2))
+                function comparePoints(pointA, pointB) {
+                    const tsA = pointA.properties[PROPERTY_TIMESTAMP]
+                    const tsB = pointB.properties[PROPERTY_TIMESTAMP]
+
+                    if (tsA > tsB) return 1
+                    if (tsA < tsB) return -1
+
+                    return 0
+                }
+
+                const featureCollection = helper.featureCollection(points.sort(comparePoints))
+                const boundingBox = bbox(buffer(featureCollection, 2))
                 console.log('featureCollection', featureCollection)
 
                 this.createMap(featureCollection)
