@@ -11,6 +11,8 @@ import buffer from '@turf/buffer'
 
 import { loadMarker, flexTrex } from './markers'
 
+import { PathDataset, PathInterpolator, getPositionInInterval } from './path-interpolator.js'
+
 const helper = require('@turf/helpers')
 
 
@@ -78,11 +80,13 @@ export default class RoadToHack {
         }
     }
 
-    createMap(featureColl) {
+    createMap(featureColl, pathInterpolator) {
 
         if (this.mapboxmap) {
             return
         }
+
+      console.log("pathInterpolator=", pathInterpolator);
 
         const container = document.getElementById('container')
         const mapDiv = document.createElement('div')
@@ -113,10 +117,10 @@ export default class RoadToHack {
             center: [-96, 37.8],
             zoom: 3
         })
- 
+
         // San Francisco
         let origin = [-122.414, 37.776]
- 
+
         // Washington DC
         let destination = [-77.032, 38.913]
 
@@ -141,7 +145,7 @@ export default class RoadToHack {
         timeDiv.appendChild(timeText)
         timeDiv.setAttribute('class', 'bottom-right color-darken75 txt-bold')
         container.appendChild(timeDiv)
- 
+
         // A simple line from origin to destination.
         let route = {
             'type': 'FeatureCollection',
@@ -155,7 +159,7 @@ export default class RoadToHack {
                 }
             }]
         }
- 
+
         // A single point that animates along the route.
         // Coordinates are initially set to origin.
         let point = {
@@ -169,25 +173,25 @@ export default class RoadToHack {
                 }
             }]
         }
- 
+
         // Calculate the distance in kilometers between route start/end point.
         let lineDistance = turfLength(route.features[0], 'kilometers')
         console.log('distance', lineDistance)
- 
+
         let stepPoints = []
- 
+
         // Make sure that there are enough stops along the route
         for (let i = 0; i < lineDistance; i += lineDistance / STEPS) {
             let segment = along(route.features[0], i, 'kilometers')
             stepPoints.push(segment.geometry.coordinates)
         }
- 
+
         // Update the route with calculated arc coordinates
         route.features[0].geometry.coordinates = stepPoints
- 
+
         // Used to increment the value of the point measurement against the route.
         let counter = 0
- 
+
         map.on('load', function () {
             return loadMarker(map, flexTrex.image, flexTrex.name)
                 .then(() => {
@@ -196,12 +200,12 @@ export default class RoadToHack {
                         'type': 'geojson',
                         'data': route
                     })
-        
+
                     map.addSource('point', {
                         'type': 'geojson',
                         'data': point
                     })
-        
+
                     map.addLayer({
                         'id': 'route',
                         'source': 'route',
@@ -211,7 +215,7 @@ export default class RoadToHack {
                             'line-color': '#007cbf'
                         }
                     })
-        
+
                     map.addLayer({
                         'id': 'point',
                         'source': 'point',
@@ -226,12 +230,29 @@ export default class RoadToHack {
                             // 'symbol-placement': 'line',
                         }
                     })
-        
+
+
                     function animate() {
+
+                        const timeOffset = (counter * timeStep);
+                        const timePoint = pathInterpolator.pathDataset.startTime + timeOffset;
+                        // console.log("timePoint=", timePoint, "timeOffset=", timeOffset)
+                        const val = pathInterpolator.goToAbsoluteTime(timePoint);
+                      const interval = val.interval;
+                        // console.log("val=", interval.velocity, "phase=", pathInterpolator.phase)
+
+                        const newPosition = getPositionInInterval(val.interval, val.phase);
+                      // console.log("coords=", JSON.stringify(newPosition.geometry.coordinates), "newPos=", JSON.stringify(newPosition))
+
+                      const zoomLevel = interval.velocity > 1.0 ? 14 : 15;
+                      const veloStr = `${interval.velocity.toFixed(1)} <i>km/h</i>`;
+
                         // Update point geometry to a new position based on counter denoting
                         // the index to access the arc.
-                        point.features[0].geometry.coordinates = route.features[0].geometry.coordinates[counter]
-        
+                      point.features[0].geometry.coordinates = newPosition.geometry.coordinates; //route.features[0].geometry.coordinates[counter]
+                        // point.features[0].geometry.coordinates = route.features[0].geometry.coordinates[counter]
+
+
                         if (route && route.features.length > 0) {
                             // Calculate the bearing to ensure the icon is rotated to match the route arc
                             // The bearing is calculate between the current point and the next point, except
@@ -241,30 +262,35 @@ export default class RoadToHack {
                                 helper.point(route.features[0].geometry.coordinates[counter >= STEPS ? counter : counter + 1])
                             )
                         }
-        
+                      map.easeTo({
+                        zoom:zoomLevel,
+                        center: newPosition.geometry.coordinates,
+                        duration: 200,
+                      });
+
                         // Update the source with this new data.
                         map.getSource('point').setData(point)
-        
+
                         // Request the next frame of animation so long the end has not been reached.
                         if (counter < STEPS) {
                             requestAnimationFrame(animate)
                         }
 
-                        timeText.innerHTML = formatDateTime(new Date(departureTime.getTime() + (counter * timeStep)))
-        
+                      timeText.innerHTML = veloStr + "<br>" + formatDateTime(new Date(departureTime.getTime() + (counter * timeStep)))
+
                         counter = counter + 1
                     }
-        
+
                     document.getElementById('replay').addEventListener('click', function() {
                         // Set the coordinates of the original point back to origin
                         point.features[0].geometry.coordinates = origin
-        
+
                         // Update the source layer
                         map.getSource('point').setData(point)
-        
+
                         // Reset the counter
                         counter = 0
-        
+
                         // Restart the animation.
                         animate(counter)
                     })
@@ -323,6 +349,19 @@ export default class RoadToHack {
                     )
                 })
 
+              const pathData = dataTable.data.map(d => {
+
+                    let timestampMs = new Date(d[ts].value).getTime()
+                    return { timestampMs, lat: d[lat].value, lon: d[lng].value }
+                    return helper.point(
+                        [
+                            d[lng].value,
+                            d[lat].value
+                        ],
+                        pointProperty
+                    )
+              });
+
                 function comparePoints(pointA, pointB) {
                     const tsA = pointA.properties[PROPERTY_TIMESTAMP]
                     const tsB = pointB.properties[PROPERTY_TIMESTAMP]
@@ -333,11 +372,18 @@ export default class RoadToHack {
                     return 0
                 }
 
+              // create a dataset out of the points list
+                const pathDataset = new PathDataset(pathData);
+                console.log("Created PathDataSet", pathDataset)
+
+              // create a path interpolator
+                const pathInterpolator = new PathInterpolator(pathDataset);
+
                 const featureCollection = helper.featureCollection(points.sort(comparePoints))
                 const boundingBox = bbox(buffer(featureCollection, 2))
                 console.log('featureCollection', featureCollection)
 
-                this.createMap(featureCollection)
+                this.createMap(featureCollection, pathInterpolator)
                 this.mapboxmap.fitBounds(boundingBox)
 
                 return
