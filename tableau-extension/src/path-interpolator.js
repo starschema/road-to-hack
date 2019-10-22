@@ -121,7 +121,6 @@ function getIntervalPhase(interval, time) {
 function getPositionInInterval(interval, phase) {
   let distance = phase * interval.length;
   let ln = helpers.lineString([interval.startPoint, interval.endPoint]);
-  console.log('phase=', phase, "ln=", JSON.stringify(ln))
   let pt = turfAlong(ln, distance)
   if (!Array.isArray(pt.geometry.coordinates)) {
     return pt.geometry.coordinates;
@@ -129,8 +128,19 @@ function getPositionInInterval(interval, phase) {
   return pt;
 }
 
+function zoomLevelForSpeed(velocity) {
+  if (velocity < 1.0) return 15;
+  if (velocity < 5) return 14;
+  if (velocity < 10) return 13;
+  if (velocity < 15) return 12;
+  if (velocity < 20) return 11;
+  if (velocity < 25) return 10;
+  return 9;
+}
+
 module.exports = {
   PathDataset,
   PathInterpolator,
   getPositionInInterval,
+  zoomLevelForSpeed,
 }

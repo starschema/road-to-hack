@@ -11,7 +11,7 @@ import buffer from '@turf/buffer'
 
 import { loadMarker, flexTrex } from './markers'
 
-import { PathDataset, PathInterpolator, getPositionInInterval } from './path-interpolator.js'
+import { PathDataset, PathInterpolator, getPositionInInterval, zoomLevelForSpeed } from './path-interpolator.js'
 
 const helper = require('@turf/helpers')
 
@@ -190,7 +190,8 @@ export default class RoadToHack {
         route.features[0].geometry.coordinates = stepPoints
 
         // Used to increment the value of the point measurement against the route.
-        let counter = 0
+      let counter = 0;
+      let lastZoom = 3;
 
         map.on('load', function () {
             return loadMarker(map, flexTrex.image, flexTrex.name)
@@ -244,7 +245,7 @@ export default class RoadToHack {
                         const newPosition = getPositionInInterval(val.interval, val.phase);
                       // console.log("coords=", JSON.stringify(newPosition.geometry.coordinates), "newPos=", JSON.stringify(newPosition))
 
-                      const zoomLevel = interval.velocity > 1.0 ? 14 : 15;
+                      const zoomLevel = zoomLevelForSpeed(interval.velocity);
                       const veloStr = `${interval.velocity.toFixed(1)} <i>km/h</i>`;
 
                         // Update point geometry to a new position based on counter denoting
@@ -262,11 +263,16 @@ export default class RoadToHack {
                                 helper.point(route.features[0].geometry.coordinates[counter >= STEPS ? counter : counter + 1])
                             )
                         }
-                      map.easeTo({
-                        zoom:zoomLevel,
-                        center: newPosition.geometry.coordinates,
-                        duration: 200,
-                      });
+
+                      let newZoom = lastZoom + ((zoomLevel - lastZoom) / 5.0)
+                      lastZoom = newZoom;
+                        map.setZoom(newZoom);
+                        map.setCenter(newPosition.geometry.coordinates);
+                      // map.easeTo({
+                      //   zoom:zoomLevel,
+                      //   center: newPosition.geometry.coordinates,
+                      //   duration: 200,
+                      // });
 
                         // Update the source with this new data.
                         map.getSource('point').setData(point)
@@ -360,7 +366,7 @@ export default class RoadToHack {
                         ],
                         pointProperty
                     )
-              });
+              }).sort((a,b) => a.timestampMs > b.timestampMs ? 1 : -1);
 
                 function comparePoints(pointA, pointB) {
                     const tsA = pointA.properties[PROPERTY_TIMESTAMP]
