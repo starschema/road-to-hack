@@ -36,16 +36,35 @@ document.addEventListener('DOMContentLoaded', _event => {
                 const config = mapboxExtension.getConfig()
                 config.reload()
                     .then(() => {
-                        const worksheetToListen = Config.findSelectedSheet(config.selectedSheet)
 
                         const selectionChangedHandler = (tableauEvent) => {
                             console.log('selection changed event:', tableauEvent)
                             mapboxExtension.showTableauData()
                         }
 
+                        const worksheetToListen = Config.findSelectedSheet(config.selectedSheet)
+
+                        let dashboard = tableau.extensions.dashboardContent.dashboard
+                        dashboard.worksheets.forEach(function (worksheet) {
+                            // do something with the worksheets..
+                            console.log('The worksheet name is ' + worksheet.name)
+
+                            worksheet.addEventListener(
+                                tableau.TableauEventType.MarkSelectionChanged,
+                                (tableauEvent) => {
+                                    console.log(`${new Date()} Selection changed on  ${worksheet.name}`)
+                                    console.log('tableau event', tableauEvent)
+
+                                    return selectionChangedHandler(tableauEvent)
+                                }
+                            )
+                        })
+
+
                         // Unregister the previously registered click handler, if there is one
                         if (unregisterSelectionChangedHandler) {
                             unregisterSelectionChangedHandler()
+                            unregisterSelectionChangedHandler = null
                         }
         
                         unregisterSelectionChangedHandler = worksheetToListen.addEventListener(
@@ -57,6 +76,12 @@ document.addEventListener('DOMContentLoaded', _event => {
                         mapboxExtension.setWorksheet(worksheetToListen)
                         mapboxExtension.showTableauData()
                     })
+            }
+
+            // Unregister the previously registered click handler, if there is one
+            if (unregisterSelectionChangedHandler) {
+                unregisterSelectionChangedHandler()
+                unregisterSelectionChangedHandler = null
             }
 
             tableau.extensions.settings.addEventListener(

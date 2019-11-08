@@ -129,7 +129,7 @@ function getPositionInInterval(interval, phase) {
 }
 
 function zoomLevelForSpeed(velocity) {
-  if (velocity < 1.0) return 15;
+  if (velocity < 1.0) return 14;
   if (velocity < 5) return 14;
   if (velocity < 10) return 13;
   if (velocity < 15) return 12;
