@@ -55,6 +55,8 @@ document.addEventListener('DOMContentLoaded', _event => {
                                     console.log(`${new Date()} Selection changed on  ${worksheet.name}`)
                                     console.log('tableau event', tableauEvent)
 
+                                    mapboxExtension.setWorksheet(worksheet)
+
                                     return selectionChangedHandler(tableauEvent)
                                 }
                             )

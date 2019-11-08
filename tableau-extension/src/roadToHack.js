@@ -366,6 +366,11 @@ export default class RoadToHack {
                         'Displaying only 10,000 rows.')
                 }
 
+                this.worksheet.getFiltersAsync()
+                    .then(filters => {
+                        console.log('filters', filters)
+                    })
+
                 // console.log('dataTable', dataTable)
 
                 const columnNames = dataTable.columns.map(column => {
