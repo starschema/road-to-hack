@@ -44,8 +44,8 @@ export default class RoadToHack {
         this.config = config
         this.layerId = 'viz'
         // this.style = 'mapbox://styles/tableau-enterprise/cjm1eynpp5f0u2sn1g4nzmax5/'
-        // this.style = 'mapbox://styles/tfoldi/ck2nj0que0mb11couiotta8r4'     // Tableau Conf style
-        this.style = 'mapbox://styles/tfoldi/ck2p0z0vy17sr1dqse86clb12'
+        this.style = 'mapbox://styles/tfoldi/ck2nj0que0mb11couiotta8r4'     // comic style
+        // this.style = 'mapbox://styles/tfoldi/ck2p0z0vy17sr1dqse86clb12'     // v3
         this.worksheet = null
 
         // this.mapboxToken = tableau.extensions.settings.get(settingKeys.MAPBOX_TOKEN)
@@ -292,7 +292,7 @@ export default class RoadToHack {
         container.appendChild(timeDiv)
 
         map.on('load', function () {
-            return loadMarker(map, chimed.image, chimed.name)
+            return loadMarker(map, flexTrex.image, flexTrex.name)
                 .then(() => {
                     // Add a source and layer displaying a point which will be animated in a circle.
                     map.addSource('route', {
@@ -320,7 +320,7 @@ export default class RoadToHack {
                         'source': 'point',
                         'type': 'symbol',
                         'layout': {
-                            'icon-image': chimed.name,
+                            'icon-image': flexTrex.name,
                             'icon-keep-upright': true,
                             'icon-rotate': ['+', ['get', 'bearing'], -90],
                             'icon-rotation-alignment': 'map',
