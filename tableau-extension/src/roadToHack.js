@@ -24,14 +24,14 @@ const TABLEAU_ENTERPRISE_STYLE_URL = 'mapbox://styles/tableau-enterprise/'
 const STEPS = 1500
 // const STEPS = 600
 
-const PROPERTY_TIMESTAMP = 'timestamp'
-const PROPERTY_TS_EPOCH = 'ts epoch'
+const PROPERTY_TIMESTAMP = 'timestamp (walking data.csv)'
+const PROPERTY_TS_EPOCH = 'ts epoch (walking data.csv)'
 const PROPERTY_TYPE = 'type'
-const PROPERTY_USERNAME  = 'username'
-const PROPERTY_DISTANCE = 'distance km'
-const PROPERTY_LATITUDE = 'latitude'
-const PROPERTY_LONGITUDE = 'longitude'
-const PROPERTY_SPEED = 'speed kph'
+const PROPERTY_USERNAME  = 'username (walking data.csv)'
+const PROPERTY_DISTANCE = 'distance km (walking data.csv)'
+const PROPERTY_LATITUDE = 'latitude (walking data.csv)'
+const PROPERTY_LONGITUDE = 'longitude (walking data.csv)'
+const PROPERTY_SPEED = 'speed kph (walking data.csv)'
 
 let animate = function (counter) {
     console.log('animate is not yet ready')
@@ -371,6 +371,7 @@ export default class RoadToHack {
                 const columnNames = dataTable.columns.map(column => {
                     return column.fieldName.toLowerCase()
                 })
+                console.log('columnNames', columnNames)
                 const lat = columnNames.indexOf(PROPERTY_LATITUDE)
                 const lng = columnNames.indexOf(PROPERTY_LONGITUDE)
                 const ts = columnNames.indexOf(PROPERTY_TIMESTAMP)
@@ -418,8 +419,8 @@ export default class RoadToHack {
                 const pathInterpolator = new PathInterpolator(pathDataset)
 
                 const featureCollection = helper.featureCollection(points.sort(comparePoints))
-                const boundingBox = bbox(buffer(featureCollection, 2))
                 console.log('featureCollection', featureCollection)
+                const boundingBox = bbox(buffer(featureCollection, 2))
 
                 this.createMap(featureCollection, pathInterpolator)
                 this.mapboxmap.fitBounds(boundingBox)

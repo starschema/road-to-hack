@@ -32,13 +32,14 @@ export default class Config {
     static findSelectedSheet(selectedSheet) {
         const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets
         let foundSheet = worksheets.find(sheet => {
-            return sheet.name == "Walking Trend"
+            return sheet.name == 'Walking Trend'
+            // return sheet.name == selectedSheet
         })
 
         // Let's give back the first sheet, if there is none selected
-        // if (!foundSheet && worksheets.length > 2) {
-        //    foundSheet = worksheets[0]
-        // }
+        if (!foundSheet && worksheets.length > 2) {
+            foundSheet = worksheets[0]
+        }
         console.log('Selected worksheet:', foundSheet)
         return foundSheet
     }
