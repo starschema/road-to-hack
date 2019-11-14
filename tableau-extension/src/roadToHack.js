@@ -184,7 +184,7 @@ export default class RoadToHack {
 
             let newZoom = lastZoom + ((zoomLevel - lastZoom) / 5.0)
             lastZoom = newZoom
-            map.setZoom(newZoom)
+            // map.setZoom(newZoom)
             map.setCenter(newPosition.geometry.coordinates)
             // map.easeTo({
             //   zoom:zoomLevel,
@@ -365,11 +365,6 @@ export default class RoadToHack {
                     alert('Attempted to query more data than 10,000 rows, which is the current limitation for Tableau extensions!\n\n' +
                         'Displaying only 10,000 rows.')
                 }
-
-                this.worksheet.getFiltersAsync()
-                    .then(filters => {
-                        console.log('filters', filters)
-                    })
 
                 // console.log('dataTable', dataTable)
 
