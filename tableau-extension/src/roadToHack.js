@@ -184,7 +184,7 @@ export default class RoadToHack {
 
             let newZoom = lastZoom + ((zoomLevel - lastZoom) / 5.0)
             lastZoom = newZoom
-            map.setZoom(newZoom)
+            // map.setZoom(newZoom)
             map.setCenter(newPosition.geometry.coordinates)
             // map.easeTo({
             //   zoom:zoomLevel,
