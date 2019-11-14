@@ -44,23 +44,24 @@ document.addEventListener('DOMContentLoaded', _event => {
 
                         const worksheetToListen = Config.findSelectedSheet(config.selectedSheet)
 
-                        let dashboard = tableau.extensions.dashboardContent.dashboard
-                        dashboard.worksheets.forEach(function (worksheet) {
-                            // do something with the worksheets..
-                            console.log('The worksheet name is ' + worksheet.name)
+                        // let dashboard = tableau.extensions.dashboardContent.dashboard
+                        // dashboard.worksheets.forEach(function (worksheet) {
+                        const worksheet = worksheetToListen
+                        // do something with the worksheets..
+                        console.log('The worksheet name is ' + worksheet.name)
 
-                            worksheet.addEventListener(
-                                tableau.TableauEventType.MarkSelectionChanged,
-                                (tableauEvent) => {
-                                    console.log(`${new Date()} Selection changed on  ${worksheet.name}`)
-                                    console.log('tableau event', tableauEvent)
+                        worksheet.addEventListener(
+                            tableau.TableauEventType.MarkSelectionChanged,
+                            (tableauEvent) => {
+                                console.log(`${new Date()} Selection changed on  ${worksheet.name}`)
+                                console.log('tableau event', tableauEvent)
 
-                                    mapboxExtension.setWorksheet(worksheet)
+                                mapboxExtension.setWorksheet(worksheet)
 
-                                    return selectionChangedHandler(tableauEvent)
-                                }
-                            )
-                        })
+                                return selectionChangedHandler(tableauEvent)
+                            }
+                        )
+                        // })
 
 
                         // Unregister the previously registered click handler, if there is one
